@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@types/three": "^0.178.0",
     "@vue/cli": "^5.0.8",
     "three": "^0.178.0",
     "vue": "2",

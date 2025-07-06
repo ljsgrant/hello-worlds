@@ -5,15 +5,17 @@
 			<h2 class="subtitle">A tiny spatial spirograph toy</h2>
 		</div>
 		<div class="content">
-			<p>content goes here</p>
+			<ThreeScene />
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
+	import ThreeScene from "./components/ThreeScene.vue"
+
 	export default {
 		name: "App",
-		components: {},
+		components: { ThreeScene },
 		data() {
 			return {}
 		},
