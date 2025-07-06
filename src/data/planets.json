@@ -1,0 +1,22 @@
+{
+	"planets": [
+		{
+			"name": "primis",
+			"radius": 0.1,
+			"averageDistanceFromStar": 0.39,
+			"colour": "#a9a9a9",
+			"orbit": {
+				"parent": "sun",
+				"speed": 0.24,
+				"semiMajorAxis_a": 0.39,
+				"semiMinorAxis_b": 0.38,
+				"semiParameter": 0.39,
+				"apoapsis": 0.46,
+				"periapsis": 0.32,
+				"direction": "counterclockwise",
+				"inclination": 7.005,
+				"longitudeOfAscendingNode": 48.331
+			}
+		}
+	]
+}

@@ -9,6 +9,9 @@
 	import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 	import { defineComponent } from "vue"
 
+	import planetsData from "../data/planets.json" with { type: "json" }
+	import type { OrbitalParameters } from "../types/types.ts"
+
 	declare module "three/examples/jsm/controls/OrbitControls.js"
 
 	export default defineComponent({
@@ -20,13 +23,15 @@
 				camera: null as THREE.PerspectiveCamera | null,
 				renderer: null as THREE.WebGLRenderer | null,
 				controls: null as OrbitControls | null,
+				planets: planetsData.planets,
 			}
 		},
 		mounted() {
 			this.initScene()
+			this.initPlanets()
 		},
 		methods: {
-			initScene() {
+			initScene(): void {
 				const canvas = this.$refs.threeCanvas as HTMLCanvasElement
 				this.scene = new THREE.Scene()
 				this.camera = this.initCamera(canvas)
@@ -34,7 +39,7 @@
 				this.controls = this.initControls(this.camera, this.renderer)
 				this.initLights(this.scene)
 
-				// TODO: placeholder debug code, remove
+				// TODO: place`holder debug code, remove
 				const geometry = new THREE.BoxGeometry()
 				const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 })
 				const cube = new THREE.Mesh(geometry, material)
@@ -53,12 +58,12 @@
 				camera.rotation.x = this.degreesToRadians(-90)
 				return camera
 			},
-			initRenderer(canvas: HTMLCanvasElement) {
+			initRenderer(canvas: HTMLCanvasElement): THREE.WebGLRenderer {
 				const renderer = new THREE.WebGLRenderer({ canvas })
 				renderer.setSize(window.innerWidth, window.innerHeight)
 				return renderer
 			},
-			initLights(scene: THREE.Scene) {
+			initLights(scene: THREE.Scene): void {
 				const ambientLight = new THREE.AmbientLight(0xffffff, 0.3)
 				scene.add(ambientLight)
 
@@ -69,19 +74,48 @@
 			initControls(
 				camera: THREE.PerspectiveCamera,
 				renderer: THREE.WebGLRenderer,
-			) {
+			): OrbitControls {
 				const controls: OrbitControls = new OrbitControls(
 					camera,
 					renderer.domElement,
 				)
-				// TODO: check sensible
-				controls.enableDamping = true
-				controls.dampingFactor = 0.25
 				controls.target.set(0, 0, 0)
 				controls.update()
 				return controls
 			},
-			animate() {
+			initPlanets(): void {
+				this.planets.forEach((planet) => {
+					console.log(Object.entries(planet))
+
+					const orbitParams: OrbitalParameters =
+						(planet.orbit as OrbitalParameters) || {}
+					const {
+						parent,
+						speed,
+						semiMajorAxis_a,
+						semiMinorAxis_b,
+						semiParameter,
+						apoapsis,
+						periapsis,
+						direction,
+						inclination,
+						longitudeOfAscendingNode,
+					} = orbitParams
+					const eccentricity = semiMajorAxis_a > 0 ? Math.sqrt(
+						1 -
+							(semiMinorAxis_b * semiMinorAxis_b) /
+								(semiMajorAxis_a * semiMajorAxis_a)
+					): Math.sqrt(
+						1 +
+							(semiMinorAxis_b * semiMinorAxis_b) /
+								(semiMajorAxis_a * semiMajorAxis_a)
+					)
+					console.log(
+						`Planet: ${planet.name}, Eccentricity: ${eccentricity}`
+					)
+				})
+			},
+			animate(): void {
 				requestAnimationFrame(this.animate)
 				const deltaTime = this.clock.getDelta()
 				if (this.controls) this.controls.update(deltaTime)
