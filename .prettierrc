@@ -1,8 +1,9 @@
 {
-  "useTabs": true,
-  "semi": false,
-  "trailingComma": "all",
-  "singleQuote": false,
-  "vueIndentScriptAndStyle": true,
-  "arrowParens": "always" 
+	"useTabs": true,
+	"semi": false,
+	"trailingComma": "all",
+	"singleQuote": false,
+	"vueIndentScriptAndStyle": true,
+	"arrowParens": "always",
+	"printWidth": 80
 }
