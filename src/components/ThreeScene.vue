@@ -91,29 +91,62 @@
 						(planet.orbit as OrbitalParameters) || {}
 					const {
 						parent,
-						speed,
-						semiMajorAxis_a,
-						semiMinorAxis_b,
-						semiParameter,
 						apoapsis,
 						periapsis,
-						direction,
 						inclination,
 						longitudeOfAscendingNode,
+						argumentOfPeriapsis,
+						meanAnomaly,
 					} = orbitParams
-					const eccentricity = semiMajorAxis_a > 0 ? Math.sqrt(
-						1 -
-							(semiMinorAxis_b * semiMinorAxis_b) /
-								(semiMajorAxis_a * semiMajorAxis_a)
-					): Math.sqrt(
-						1 +
-							(semiMinorAxis_b * semiMinorAxis_b) /
-								(semiMajorAxis_a * semiMajorAxis_a)
+
+					const semiMajorAxis = (apoapsis + periapsis) / 2
+					const semiMinorAxis = Math.sqrt(apoapsis * periapsis)
+					const eccentricity = this.deriveEccentricityFromSemiAxes(
+						semiMajorAxis,
+						semiMinorAxis,
 					)
-					console.log(
-						`Planet: ${planet.name}, Eccentricity: ${eccentricity}`
+					// calculating the radius, where theta represents the true anomaly,
+					// or angle on the ellipse in radians
+					// r = a * (1 - e^2) / (1 + e * cos(θ))
+					const radius = this.findRadiusForMeanAnomaly(
+						semiMajorAxis,
+						eccentricity,
+						meanAnomaly,
 					)
+
+					// TODO: the above gives in 2D only.
+					// Need to include inclination, longitudeOfAscendingNode & argumentOfPeriapsis,
+					// And need to then convert to cartesian coords
 				})
+			},
+			findRadiusForMeanAnomaly(
+				semiMajorAxis: number,
+				eccentricity: number,
+				meanAnomaly: number,
+			): number {
+				const radius =
+					(semiMajorAxis * (1 - eccentricity * eccentricity)) /
+					(1 + eccentricity * Math.cos(this.degreesToRadians(meanAnomaly)))
+				return radius
+			},
+			deriveEccentricityFromSemiAxes(
+				semiMajorAxis: number,
+				semiMinorAxis: number,
+			): number {
+				if (semiMajorAxis === 0) return 0
+				const eccentricity =
+					semiMajorAxis > 0
+						? Math.sqrt(
+								1 -
+									(semiMinorAxis * semiMinorAxis) /
+										(semiMajorAxis * semiMajorAxis),
+							)
+						: Math.sqrt(
+								1 +
+									(semiMinorAxis * semiMinorAxis) /
+										(semiMajorAxis * semiMajorAxis),
+							)
+				return eccentricity
 			},
 			animate(): void {
 				requestAnimationFrame(this.animate)

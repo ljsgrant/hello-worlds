@@ -8,14 +8,13 @@
 			"orbit": {
 				"parent": "sun",
 				"speed": 0.24,
-				"semiMajorAxis_a": 0.39,
-				"semiMinorAxis_b": 0.38,
 				"semiParameter": 0.39,
 				"apoapsis": 0.46,
 				"periapsis": 0.32,
-				"direction": "counterclockwise",
 				"inclination": 7.005,
-				"longitudeOfAscendingNode": 48.331
+				"longitudeOfAscendingNode": 48.331,
+				"argumentOfPeriapsis": 0,
+				"meanAnomaly": 0
 			}
 		}
 	]
