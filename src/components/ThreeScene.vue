@@ -11,6 +11,7 @@
 
 	import planetsData from "../data/planets.json" with { type: "json" }
 	import type { OrbitalParameters } from "../types/types.ts"
+	// test
 
 	declare module "three/examples/jsm/controls/OrbitControls.js"
 
