@@ -17,9 +17,7 @@
 		name: string
 		colour: number
 		radius: number
-		maxOrbitsToDraw: number
-		_objectData: THREE.Mesh | null
-		_orbitLines: THREE.LineLoop[]
+		maxOrbitLength: number
 		semiMajorAxis: number // (a) (in AU)
 		eccentricity: number // (e)
 		inclination: number // (i) (radians)
@@ -28,17 +26,26 @@
 		meanLongitudeAtEpoch: number // (L0) L (radians)
 		rateOfChangeOfMeanLongitude: number // (Ldot) (radians per Julian century)
 		longitudeOfPeriapsis: number // (p) (radians) = W + w
+		apsidalPrecession: number // how much does the orbit "swing" around its vertical axis
+		inclinationDrift: number // how much does the eccentricity change over time
+		_objectData: THREE.Mesh | null
+		_orbitLines: THREE.LineLoop[]
+		_orbitPoints: THREE.Vector3[]
+		_orbitCurve: THREE.Line | null
 	}
 
 	export default defineComponent({
 		name: "ThreeScene",
 		data() {
 			return {
-				clock: new THREE.Clock(),
 				scene: null as THREE.Scene | null,
 				camera: null as THREE.PerspectiveCamera | null,
 				renderer: null as THREE.WebGLRenderer | null,
 				controls: null as OrbitControls | null,
+				animationFrameId: null as number | null,
+				clock: new THREE.Clock(),
+				simulatedTime: 0,
+				useActualElapsedTime: false,
 				planetData: planetsJson.planets,
 				starData: planetsJson.star,
 				satellite: null as THREE.Mesh | null,
@@ -47,9 +54,9 @@
 					{
 						name: "Earth",
 						colour: 0x3399ff,
-						radius: 0.5,
-						maxOrbitsToDraw: 2,
-						semiMajorAxis: 0.50000261, // (a) - semi-major axis (in AU)
+						radius: 1.5,
+						maxOrbitLength: 10000,
+						semiMajorAxis: 0.5, // (a) - semi-major axis (in AU)
 						eccentricity: 0.5, // (e) - Eccentricity
 						inclination: THREE.MathUtils.degToRad(10), // (i) - Inclination (radians)
 						longitudeOfAscendingNode: THREE.MathUtils.degToRad(-11.26064), // (W) - Longitude of ascending node Ω (radians)
@@ -61,16 +68,19 @@
 							102.93768193 - -11.26064, // (p) - Longitude of periapsis (radians) = W + w
 						), // (p) - Longitude of periapsis (radians) = W + w
 						apsidalPrecession: 0.01, // how much does the orbit "swing" around its vertical axis
+						inclinationDrift: 0.001, // how much does the eccentricity change over time
 						_objectData: null as THREE.Mesh | null,
 						_orbitLines: [] as THREE.LineLoop[],
+						_orbitPoints: [] as THREE.Vector3[],
+						_orbitCurve: null as THREE.Line | null,
 					},
 					{
 						name: "Mars",
 						colour: 0x993333,
-						radius: 0.5,
-						maxOrbitsToDraw: 2,
-						semiMajorAxis: 0.50000261, // (a) - semi-major axis (in AU)
-						eccentricity: 0.5, // (e) - Eccentricity
+						radius: 2.5,
+						maxOrbitLength: 10000,
+						semiMajorAxis: 0.95, // (a) - semi-major axis (in AU)
+						eccentricity: 0.1, // (e) - Eccentricity
 						inclination: THREE.MathUtils.degToRad(45), // (i) - Inclination (radians)
 						longitudeOfAscendingNode: THREE.MathUtils.degToRad(-11.26064), // (W) - Longitude of ascending node Ω (radians)
 						argumentOfPeriapsis: THREE.MathUtils.degToRad(150), // (w) - Argument of periapsis ω (radians)
@@ -80,12 +90,15 @@
 						longitudeOfPeriapsis: THREE.MathUtils.degToRad(
 							102.93768193 - -11.26064, // (p) - Longitude of periapsis (radians) = W + w
 						), // (p) - Longitude of periapsis (radians) = W + w
-						apsidalPrecession: 0.01, // how much does the orbit "swing" around its vertical axis
+						apsidalPrecession: 0, // how much does the orbit "swing" around its vertical axis
+						inclinationDrift: 0.01, // how much does the inclination change over time
 						_objectData: null as THREE.Mesh | null,
 						_orbitLines: [] as THREE.LineLoop[],
+						_orbitPoints: [] as THREE.Vector3[],
+						_orbitCurve: null as THREE.Line | null,
 					},
 				],
-				speedMultiplier: 0.1,
+				speedMultiplier: 20000000,
 				AU: 100, // 1 AU = 100 Three.js units
 				planetScale: 1, // base radius for planet spheres
 			}
@@ -95,6 +108,11 @@
 
 			this.initStar(this.scene)
 			this.initPlanets(this.scene)
+		},
+		beforeDestroy() {
+			if (this.animationFrameId) {
+				cancelAnimationFrame(this.animationFrameId)
+			}
 		},
 		methods: {
 			initScene(): THREE.Scene {
@@ -173,19 +191,32 @@
 				}
 			},
 			animate(): void {
-				requestAnimationFrame(this.animate)
+				this.animationFrameId = requestAnimationFrame(this.animate)
 				const deltaTime = this.clock.getDelta()
 				if (this.controls) this.controls.update(deltaTime)
 
-				const now = Date.now()
+				if (!this.useActualElapsedTime) {
+					const timeStep = deltaTime * this.speedMultiplier
+					this.simulatedTime += timeStep
+				}
+
+				const now = this.useActualElapsedTime ? Date.now() : this.simulatedTime
+				console.log(now)
 
 				for (const planet of this.planets) {
 					const pos = this.orbitalPosition(planet, now)
 					if (planet._objectData) {
 						planet._objectData.position.copy(pos)
 						planet.argumentOfPeriapsis += planet.apsidalPrecession
+						planet.inclination += planet.inclinationDrift
 					}
-					this.createOrbitPath(planet)
+
+					planet._orbitPoints.push(pos)
+					if (planet._orbitPoints.length > planet.maxOrbitLength) {
+						planet._orbitPoints.shift()
+					}
+
+					this.updateOrbitPath(planet)
 				}
 
 				if (this.renderer && this.scene && this.camera) {
@@ -195,32 +226,49 @@
 			degreesToRadians(degrees: number): number {
 				return (degrees * Math.PI) / 180
 			},
-			createOrbitPath(planet: Planet): void {
-				if (planet.maxOrbitsToDraw === 0) return
-
-				const orbitPoints = []
-				for (let deg = 0; deg < 360; deg += 1) {
-					const meanAnomaly = THREE.MathUtils.degToRad(deg)
-					const elementsCopy = {
-						...planet,
-						meanLongitudeAtEpoch: meanAnomaly + planet.longitudeOfPeriapsis,
-					}
-
-					const pos = this.orbitalPosition(elementsCopy, this.J2000_EPOCH)
-					orbitPoints.push(pos)
+			updateOrbitPath(planet: Planet): void {
+				if (
+					!planet ||
+					planet.maxOrbitLength < 2 ||
+					planet._orbitPoints.length < 2
+				) {
+					return
 				}
-				const orbitGeometry = new THREE.BufferGeometry().setFromPoints(
-					orbitPoints,
+
+				const planetPosition = planet._objectData?.position
+
+				const orbitCurve = new THREE.CatmullRomCurve3(
+					planet._orbitPoints,
+					false,
+					"catmullrom",
+					0.5,
 				)
-				const orbitMaterial = new THREE.LineBasicMaterial({
+
+				const interpolatedOrbitCurvePoints = orbitCurve.getPoints(
+					planet._orbitPoints.length,
+				)
+				const orbitCurveGeometry = new THREE.BufferGeometry().setFromPoints(
+					interpolatedOrbitCurvePoints,
+				)
+				const material = new THREE.LineBasicMaterial({
 					color: planet.colour,
 				})
-				const orbitLine = new THREE.LineLoop(orbitGeometry, orbitMaterial)
-				planet._orbitLines.push(orbitLine)
-				if (planet._orbitLines.length > planet.maxOrbitsToDraw) {
-					this.scene?.remove(planet._orbitLines.shift() as THREE.LineLoop)
+				const orbitPathObject = new THREE.Line(orbitCurveGeometry, material)
+
+				const previousCurve = planet._orbitCurve as THREE.Line | null
+				if (previousCurve) {
+					previousCurve.geometry.dispose()
+					if (Array.isArray(previousCurve.material)) {
+						previousCurve.material.forEach((m) => m.dispose())
+					} else {
+						previousCurve.material.dispose()
+					}
+					this.scene?.remove(previousCurve)
 				}
-				this.scene?.add(orbitLine)
+
+				this.scene?.add(orbitPathObject)
+				planet._orbitCurve = null
+				planet._orbitCurve = orbitPathObject
 			},
 			orbitalPosition(elements: Planet, time: number): THREE.Vector3 {
 				const {
@@ -293,7 +341,7 @@
 					Math.sin(longitudeOfAscendingNode) * xtemp +
 					Math.cos(longitudeOfAscendingNode) * y
 
-				// Convert AU to units you want (e.g., 1 AU = 150 units in Three.js)
+				// Convert AU to threejs units
 				const AU = 150
 				return new THREE.Vector3(x * AU, y * AU, z * AU)
 			},
