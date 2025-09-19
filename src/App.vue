@@ -1,8 +1,8 @@
 <template>
 	<div id="app">
 		<div class="header">
-			<h1 class="title">Hello, Worlds</h1>
-			<h2 class="subtitle">A tiny spatial spirograph toy</h2>
+			<!-- <h1 class="title">Hello, Worlds</h1>
+			<h2 class="subtitle">A tiny spatial spirograph toy</h2> -->
 		</div>
 		<div class="content">
 			<ThreeScene />
