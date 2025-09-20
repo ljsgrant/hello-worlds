@@ -6,10 +6,12 @@
 
 <script lang="ts">
 	import * as THREE from "three"
-	import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
 	import { defineComponent } from "vue"
-
-	import planetsJson from "../data/planets.json" with { type: "json" }
+	import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js"
+	import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js"
+	import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js"
+	// import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js"
+	import { BloomPass } from "three/examples/jsm/postprocessing/BloomPass.js"
 
 	declare module "three/examples/jsm/controls/OrbitControls.js"
 
@@ -41,25 +43,36 @@
 				scene: null as THREE.Scene | null,
 				camera: null as THREE.PerspectiveCamera | null,
 				renderer: null as THREE.WebGLRenderer | null,
+				composer: null as EffectComposer | null,
 				controls: null as OrbitControls | null,
 				animationFrameId: null as number | null,
+				intitialCameraY: 10,
+				endCameraTrackY: 150,
+				finishedCameraTrack: false,
+				cameraInnerLimit: 10,
+				cameraOuterLimit: 500,
+				controlsTarget: "Earth",
 				clock: new THREE.Clock(),
 				simulatedTime: 0,
 				useActualElapsedTime: false,
-				planetData: planetsJson.planets,
-				starData: planetsJson.star,
+
 				satellite: null as THREE.Mesh | null,
 				J2000_EPOCH: Date.UTC(2000, 0, 1, 12, 0, 0),
+				star: {
+					name: "sun",
+					radius: 5,
+					colour: "yellow",
+				},
 				planets: [
 					{
-						name: "Earth",
+						name: "earth",
 						colour: 0x3399ff,
 						radius: 1.5,
 						maxOrbitLength: 10000,
 						semiMajorAxis: 0.5, // (a) - semi-major axis (in AU)
 						eccentricity: 0.5, // (e) - Eccentricity
 						inclination: THREE.MathUtils.degToRad(10), // (i) - Inclination (radians)
-						longitudeOfAscendingNode: THREE.MathUtils.degToRad(-11.26064), // (W) - Longitude of ascending node Ω (radians)
+						longitudeOfAscendingNode: THREE.MathUtils.degToRad(5.26064), // (W) - Longitude of ascending node Ω (radians)
 						argumentOfPeriapsis: THREE.MathUtils.degToRad(150), // (w) - Argument of periapsis ω (radians)
 						meanLongitudeAtEpoch: THREE.MathUtils.degToRad(10.46457166), // (L0) - Mean longitude at epoch (radians)
 						rateOfChangeOfMeanLongitude:
@@ -75,7 +88,7 @@
 						_orbitCurve: null as THREE.Line | null,
 					},
 					{
-						name: "Mars",
+						name: "mars",
 						colour: 0x993333,
 						radius: 2.5,
 						maxOrbitLength: 10000,
@@ -97,14 +110,99 @@
 						_orbitPoints: [] as THREE.Vector3[],
 						_orbitCurve: null as THREE.Line | null,
 					},
+					{
+						name: "cluny",
+						colour: 0x888888,
+						radius: 2.5,
+						maxOrbitLength: 10000,
+						semiMajorAxis: 0.5, // (a) - semi-major axis (in AU)
+						eccentricity: 0.75, // (e) - Eccentricity
+						inclination: THREE.MathUtils.degToRad(45), // (i) - Inclination (radians)
+						longitudeOfAscendingNode: THREE.MathUtils.degToRad(-22.26064), // (W) - Longitude of ascending node Ω (radians)
+						argumentOfPeriapsis: THREE.MathUtils.degToRad(150), // (w) - Argument of periapsis ω (radians)
+						meanLongitudeAtEpoch: THREE.MathUtils.degToRad(10.46457166), // (L0) - Mean longitude at epoch (radians)
+						rateOfChangeOfMeanLongitude:
+							THREE.MathUtils.degToRad(35999.37244981), // (Ldot) - Rate of change of mean longitude (radians per Julian century)
+						longitudeOfPeriapsis: THREE.MathUtils.degToRad(
+							102.93768193 - -11.26064, // (p) - Longitude of periapsis (radians) = W + w
+						), // (p) - Longitude of periapsis (radians) = W + w
+						apsidalPrecession: 0.001, // how much does the orbit "swing" around its vertical axis
+						inclinationDrift: 0.0001, // how much does the inclination change over time
+						_objectData: null as THREE.Mesh | null,
+						_orbitLines: [] as THREE.LineLoop[],
+						_orbitPoints: [] as THREE.Vector3[],
+						_orbitCurve: null as THREE.Line | null,
+					},
+					{
+						name: "elysium",
+						colour: 0xffcc00,
+						radius: 1,
+						maxOrbitLength: 10000,
+						semiMajorAxis: 5,
+						eccentricity: 0.02, // nearly circular
+						inclination: THREE.MathUtils.degToRad(2),
+						longitudeOfAscendingNode: THREE.MathUtils.degToRad(45),
+						argumentOfPeriapsis: THREE.MathUtils.degToRad(100),
+						meanLongitudeAtEpoch: THREE.MathUtils.degToRad(80),
+						rateOfChangeOfMeanLongitude: THREE.MathUtils.degToRad(47000), // fast orbit
+						longitudeOfPeriapsis: THREE.MathUtils.degToRad(145), // W + w
+						apsidalPrecession: 0.005,
+						inclinationDrift: 0.0005,
+						_objectData: null as THREE.Mesh | null,
+						_orbitLines: [] as THREE.LineLoop[],
+						_orbitPoints: [] as THREE.Vector3[],
+						_orbitCurve: null as THREE.Line | null,
+					},
+					{
+						name: "zephyrus",
+						colour: 0x66ccff,
+						radius: 4,
+						maxOrbitLength: 10000,
+						semiMajorAxis: 3.5, // far from the star
+						eccentricity: 0.2,
+						inclination: THREE.MathUtils.degToRad(10),
+						longitudeOfAscendingNode: THREE.MathUtils.degToRad(110),
+						argumentOfPeriapsis: THREE.MathUtils.degToRad(90),
+						meanLongitudeAtEpoch: THREE.MathUtils.degToRad(20),
+						rateOfChangeOfMeanLongitude: THREE.MathUtils.degToRad(10000), // slower orbit
+						longitudeOfPeriapsis: THREE.MathUtils.degToRad(200), // W + w
+						apsidalPrecession: 0.002,
+						inclinationDrift: 0.0002,
+						_objectData: null as THREE.Mesh | null,
+						_orbitLines: [] as THREE.LineLoop[],
+						_orbitPoints: [] as THREE.Vector3[],
+						_orbitCurve: null as THREE.Line | null,
+					},
+					{
+						name: "noctis",
+						colour: 0x9900cc,
+						radius: 2,
+						maxOrbitLength: 10000,
+						semiMajorAxis: 1.2,
+						eccentricity: 0.4,
+						inclination: THREE.MathUtils.degToRad(135), // retrograde
+						longitudeOfAscendingNode: THREE.MathUtils.degToRad(250),
+						argumentOfPeriapsis: THREE.MathUtils.degToRad(120),
+						meanLongitudeAtEpoch: THREE.MathUtils.degToRad(45),
+						rateOfChangeOfMeanLongitude: THREE.MathUtils.degToRad(1800000),
+						longitudeOfPeriapsis: THREE.MathUtils.degToRad(370), // W + w
+						apsidalPrecession: 0.008,
+						inclinationDrift: 0.0015,
+						_objectData: null as THREE.Mesh | null,
+						_orbitLines: [] as THREE.LineLoop[],
+						_orbitPoints: [] as THREE.Vector3[],
+						_orbitCurve: null as THREE.Line | null,
+					},
 				],
-				speedMultiplier: 20000000,
+				speedMultiplier: 10000000,
 				AU: 100, // 1 AU = 100 Three.js units
 				planetScale: 1, // base radius for planet spheres
 			}
 		},
 		mounted() {
 			this.scene = this.initScene()
+
+			window.addEventListener("resize", this.handleCameraAndRendererSize, false)
 
 			this.initStar(this.scene)
 			this.initPlanets(this.scene)
@@ -113,15 +211,49 @@
 			if (this.animationFrameId) {
 				cancelAnimationFrame(this.animationFrameId)
 			}
+			window.removeEventListener(
+				"resize",
+				this.handleCameraAndRendererSize,
+				false,
+			)
 		},
 		methods: {
+			handleCameraAndRendererSize() {
+				if (this.camera && this.renderer) {
+					const canvas = this.$refs.threeCanvas as HTMLCanvasElement
+					const parent = canvas.parentElement
+					if (!parent) {
+						throw new Error("Canvas has no parent element.")
+					}
+
+					const width = parent.clientWidth
+					const height = parent.clientHeight
+
+					this.camera.aspect = width / height
+					this.camera.updateProjectionMatrix()
+
+					this.renderer.setSize(width, height)
+					if (this.composer) {
+						this.composer.setSize(width, height)
+						// const bloomPass = this.composer.passes.find(
+						// 	(p) => p instanceof UnrealBloomPass,
+						// )
+						// if (bloomPass) {
+						// 	bloomPass.resolution.set(width, height)
+						// }
+					}
+
+					// this.renderer.setSize(window.innerWidth, window.innerHeight)
+				}
+			},
 			initScene(): THREE.Scene {
 				const canvas = this.$refs.threeCanvas as HTMLCanvasElement
 				const scene = new THREE.Scene()
 				this.camera = this.initCamera(canvas)
-				this.renderer = this.initRenderer(canvas)
+				this.renderer = this.initRenderer(canvas, scene)
+				this.handleCameraAndRendererSize()
 				this.controls = this.initControls(this.camera, this.renderer)
-				this.initLights(scene)
+				// this.initLights(scene)
 
 				this.animate()
 				return scene
@@ -131,25 +263,57 @@
 					75,
 					window.innerWidth / window.innerHeight,
 					0.1,
-					1000,
+					2000,
 				)
-				camera.position.y = 2
+				camera.position.y = this.intitialCameraY
 				camera.rotation.x = this.degreesToRadians(-90)
 				return camera
 			},
-			initRenderer(canvas: HTMLCanvasElement): THREE.WebGLRenderer {
-				const renderer = new THREE.WebGLRenderer({ canvas })
-				renderer.setSize(window.innerWidth, window.innerHeight)
+			initRenderer(
+				canvas: HTMLCanvasElement,
+				scene: THREE.Scene,
+			): THREE.WebGLRenderer {
+				const renderer = new THREE.WebGLRenderer({
+					canvas,
+					powerPreference: "high-performance",
+					antialias: true,
+				})
+
+				const parent = canvas.parentElement
+				if (!parent) {
+					throw new Error("Canvas has no parent element.")
+				}
+
+				const width = parent.clientWidth
+				const height = parent.clientHeight
+
+				renderer.setSize(width, height)
+				renderer.setPixelRatio(window.devicePixelRatio)
+
+				if (scene && this.camera) {
+					this.composer = new EffectComposer(renderer)
+					this.composer.addPass(new RenderPass(scene, this.camera))
+					const size = new THREE.Vector2()
+					renderer.getSize(size)
+					console.log("Renderer size:", size.x, size.y)
+					// this.composer.addPass(new UnrealBloomPass(size, 0.5, 0.2, 0.5))
+					const bloomPass = new BloomPass(1, 25, 4.0)
+					bloomPass.renderToScreen = true
+					console.log("len", bloomPass)
+
+					this.composer.addPass(bloomPass)
+				}
+
 				return renderer
 			},
-			initLights(scene: THREE.Scene): void {
-				const ambientLight = new THREE.AmbientLight(0xffffff, 0.3)
-				scene.add(ambientLight)
+			// initLights(scene: THREE.Scene): void {
+			// 	const ambientLight = new THREE.AmbientLight(0xffffff, 0.3)
+			// 	scene.add(ambientLight)
 
-				const light = new THREE.PointLight(0xffffff, 3)
-				light.position.set(0, 0, 0)
-				scene.add(light)
-			},
+			// 	const light = new THREE.PointLight(0xffffff, 3)
+			// 	light.position.set(0, 0, 0)
+			// 	scene.add(light)
+			// },
 			initControls(
 				camera: THREE.PerspectiveCamera,
 				renderer: THREE.WebGLRenderer,
@@ -158,20 +322,28 @@
 					camera,
 					renderer.domElement,
 				)
+				controls.enablePan = false
+				controls.autoRotate = true
+				controls.autoRotateSpeed = 1.0
 				controls.target.set(0, 0, 0)
 				controls.update()
 				return controls
 			},
 			initStar(scene: THREE.Scene): void {
-				const star = this.starData
-				const starGeometry = new THREE.SphereGeometry(star.radius, 32, 32)
+				const starGeometry = new THREE.SphereGeometry(this.star.radius, 32, 32)
 				const starMaterial = new THREE.MeshStandardMaterial({
-					color: star.colour,
-					emissive: star.colour,
-					emissiveIntensity: 1,
+					color: this.star.colour,
+					emissive: this.star.colour,
+					emissiveIntensity: 100,
 				})
 				const starMesh = new THREE.Mesh(starGeometry, starMaterial)
 				scene.add(starMesh)
+
+				const white = new THREE.Color(0xffffff)
+
+				const starLight = new THREE.PointLight(white, 100000)
+				starLight.position.set(0, 0, 0)
+				scene.add(starLight)
 			},
 			initPlanets(scene: THREE.Scene): void {
 				for (const planet of this.planets) {
@@ -180,13 +352,14 @@
 						32,
 						32,
 					)
-					const satelliteMaterial = new THREE.MeshBasicMaterial({
+					const satelliteMaterial = new THREE.MeshStandardMaterial({
 						color: planet.colour,
 					})
 					planet._objectData = new THREE.Mesh(
 						satelliteGeometry,
 						satelliteMaterial,
 					)
+					planet._objectData.name = planet.name
 					scene.add(planet._objectData)
 				}
 			},
@@ -201,7 +374,6 @@
 				}
 
 				const now = this.useActualElapsedTime ? Date.now() : this.simulatedTime
-				console.log(now)
 
 				for (const planet of this.planets) {
 					const pos = this.orbitalPosition(planet, now)
@@ -221,6 +393,51 @@
 
 				if (this.renderer && this.scene && this.camera) {
 					this.renderer.render(this.scene, this.camera)
+					if (this.composer) {
+						this.composer.render()
+					}
+				}
+
+				if (this.camera) {
+					if (
+						this.camera &&
+						!this.finishedCameraTrack &&
+						this.camera.position.y < this.endCameraTrackY
+					) {
+						this.camera.position.y += 1
+
+						if (this.camera.position.y >= this.endCameraTrackY) {
+							this.finishedCameraTrack = true
+						}
+					}
+
+					// for (const axis of ["x", "y", "z"]) {
+					// 	if (
+					// 		this.camera.position[axis as "x" | "y" | "z"] >=
+					// 		this.cameraOuterLimit
+					// 	) {
+					// 		this.camera.position[axis as "x" | "y" | "z"] -= 20
+					// 	}
+
+					// 	if (
+					// 		this.camera.position[axis as "x" | "y" | "z"] <=
+					// 		this.cameraInnerLimit
+					// 	) {
+					// 		this.camera.position[axis as "x" | "y" | "z"] += 0.1
+					// 	}
+					// }
+				}
+
+				if (this.controls && this.controlsTarget) {
+					const targetPlanet = this.planets.find(
+						(p) => p.name === this.controlsTarget,
+					)
+					const { x, y, z } = targetPlanet?._objectData?.position || {
+						x: 0,
+						y: 0,
+						z: 0,
+					}
+					this.controls.target.set(x, y, z)
 				}
 			},
 			degreesToRadians(degrees: number): number {
@@ -348,3 +565,20 @@
 		},
 	})
 </script>
+
+<style lang="scss" scoped>
+	.three-scene-wrapper {
+		width: 100%;
+		height: 100%;
+		max-height: 90vh;
+		aspect-ratio: 2;
+	}
+
+	canvas {
+		width: 100%;
+		height: 100%;
+		border: 5px solid white;
+		box-sizing: border-box;
+		border-radius: 32px;
+	}
+</style>
