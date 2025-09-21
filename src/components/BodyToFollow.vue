@@ -1,13 +1,17 @@
 <template>
 	<div>
-		<h1>Body to Follow</h1>
+		<p class="control-title">Body to Follow</p>
 		<select
 			name="planets"
 			id="planets"
 			v-model="bodyToFollow"
 			@change="handleBodyToFollowChange"
 		>
-			<option value="volvo" v-for="planet in planets" :key="planet.name">
+			<option
+				:value="planet.name"
+				v-for="planet in [star, ...planets]"
+				:key="planet.name"
+			>
 				{{ planet.name }}
 			</option>
 		</select>
@@ -15,9 +19,17 @@
 </template>
 
 <script lang="ts">
-	export default {
+	import { defineComponent } from "vue"
+	import type { PropType } from "vue"
+	import type { Star, Planet } from "../types/types"
+
+	export default defineComponent({
 		name: "BodyToFollow",
 		props: {
+			star: {
+				type: Object as PropType<Star>,
+				required: true,
+			},
 			planets: {
 				type: Array as PropType<Planet[]>,
 				required: true,
@@ -28,10 +40,15 @@
 				bodyToFollow: "",
 			}
 		},
+		mounted() {
+			this.bodyToFollow = this.star?.name || ""
+			this.handleBodyToFollowChange()
+		},
 		methods: {
-			handleBodyToFollowChange(event: Event) {
+			handleBodyToFollowChange() {
 				this.$emit("body-to-follow", this.bodyToFollow)
 			},
 		},
-	}
+		computed: {},
+	})
 </script>
