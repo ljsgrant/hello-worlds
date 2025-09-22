@@ -1,9 +1,12 @@
 <template>
 	<div id="app">
 		<div class="header">
-			<div class="logo">🪐</div>
+			<div class="logo">
+				<p class="base">🪐</p>
+				<p class="top">🚀</p>
+			</div>
 			<div class="title-wrapper">
-				<h1 class="title">Hello, Worlds <span>🚀</span></h1>
+				<h1 class="title">Hello, Worlds</h1>
 				<h2 class="subtitle">A tiny planetary spirograph toy</h2>
 			</div>
 			<p class="disclaimer">
@@ -23,6 +26,14 @@
 				:planets="planets"
 				@body-to-follow="handleBodyToFollowChange"
 			/>
+			<div class="planet-controls-area">
+				<div v-for="planet in planets" :key="planet.name">
+					<PlanetControls
+						:planet="planet"
+						@change="handlePlanetChange($event)"
+					/>
+				</div>
+			</div>
 		</div>
 	</div>
 </template>
@@ -32,10 +43,13 @@
 	import * as THREE from "three"
 	import ThreeScene from "./components/ThreeScene.vue"
 	import BodyToFollow from "./components/BodyToFollow.vue"
+	import PlanetControls from "./components/PlanetControls.vue"
+	import type { Star, Planet } from "./types/types"
+	import type { PlanetChangeEvent } from "./types/types"
 
 	export default defineComponent({
 		name: "App",
-		components: { ThreeScene, BodyToFollow },
+		components: { ThreeScene, BodyToFollow, PlanetControls },
 		data() {
 			return {
 				controlsTarget: "earth",
@@ -182,6 +196,36 @@
 			handleBodyToFollowChange(bodyToFollow: string): void {
 				this.controlsTarget = bodyToFollow
 			},
+			handlePlanetChange(event: PlanetChangeEvent): void {
+				const { planetName, property, value } = event
+				const planetIndex = this.planets.findIndex((p) => p.name === planetName)
+				const planet = this.planets[planetIndex]
+
+				type PlanetKey = keyof Planet
+
+				if (!planet || !property || value === undefined) return
+
+				// Optional: check that the key exists on the Planet object
+				if (property in planet) {
+					// Optional: you can refine this even more if needed
+					;(planet as any)[property] = value
+
+					if (planet?._objectData?.material) {
+						const material = planet._objectData.material
+
+						if (Array.isArray(material)) {
+							material.forEach((m) => (m.needsUpdate = true))
+						} else {
+							material.needsUpdate = true
+						}
+					}
+
+					// _objectData: null as THREE.Mesh | null,
+					// 	_orbitLines: [] as THREE.LineLoop[],
+					// 	_orbitPoints: [] as THREE.Vector3[],
+					// 	_orbitCurve: null as THREE.Line | null,
+				}
+			},
 		},
 	})
 </script>
@@ -215,8 +259,21 @@
 	}
 
 	.logo {
-		font-size: 42px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
 		margin-right: 11px;
+		position: relative;
+
+		.base {
+			font-size: 42px;
+		}
+
+		.top {
+			position: absolute;
+			font-size: 30px;
+		}
 	}
 
 	.disclaimer {
@@ -225,5 +282,11 @@
 		font-style: italic;
 		margin-top: auto;
 		margin-left: auto;
+	}
+
+	.planet-controls-area {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
 	}
 </style>

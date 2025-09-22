@@ -38,3 +38,20 @@ export interface Planet {
 	_orbitPoints: THREE.Vector3[]
 	_orbitCurve: THREE.Line | null
 }
+
+export type ControlsConfiguration = {
+	property: string
+	label: string
+	type: string
+	default: string | number
+	min?: number
+	max?: number
+}
+
+export type ControlChangeEvent = ControlsConfiguration & {
+	value: string | number
+}
+
+export type PlanetChangeEvent = ControlChangeEvent & {
+	planetName: string
+}
