@@ -22,6 +22,7 @@ export interface Planet {
 	name: string
 	colour: number
 	radius: number
+	trailOpacity: number
 	maxOrbitLength: number
 	semiMajorAxis: number // (a) (in AU)
 	eccentricity: number // (e)
@@ -46,6 +47,7 @@ export type ControlsConfiguration = {
 	default: string | number
 	min?: number
 	max?: number
+	step?: number
 }
 
 export type ControlChangeEvent = ControlsConfiguration & {

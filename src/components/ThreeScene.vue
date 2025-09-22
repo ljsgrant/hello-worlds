@@ -333,7 +333,7 @@
 				const material = new THREE.LineBasicMaterial({
 					color: planet.colour,
 					transparent: true,
-					opacity: 0.5,
+					opacity: planet.trailOpacity,
 				})
 				const orbitPathObject = new THREE.Line(orbitCurveGeometry, material)
 

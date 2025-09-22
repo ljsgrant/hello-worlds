@@ -63,6 +63,7 @@
 					{
 						name: "earth",
 						colour: 0x3399ff,
+						trailOpacity: 0.5,
 						radius: 1.5,
 						maxOrbitLength: 10000,
 						semiMajorAxis: 0.5,
@@ -86,6 +87,7 @@
 					{
 						name: "mars",
 						colour: 0x993333,
+						trailOpacity: 0.5,
 						radius: 2.5,
 						maxOrbitLength: 10000,
 						semiMajorAxis: 0.95,
@@ -109,6 +111,7 @@
 					{
 						name: "cluny",
 						colour: 0x888888,
+						trailOpacity: 0.5,
 						radius: 2.5,
 						maxOrbitLength: 10000,
 						semiMajorAxis: 0.5,
@@ -132,6 +135,7 @@
 					{
 						name: "elysium",
 						colour: 0xffcc00,
+						trailOpacity: 0.5,
 						radius: 1,
 						maxOrbitLength: 10000,
 						semiMajorAxis: 5,
@@ -152,6 +156,7 @@
 					{
 						name: "zephyrus",
 						colour: 0x66ccff,
+						trailOpacity: 0.5,
 						radius: 4,
 						maxOrbitLength: 10000,
 						semiMajorAxis: 3.5,
@@ -172,6 +177,7 @@
 					{
 						name: "noctis",
 						colour: 0x9900cc,
+						trailOpacity: 0.5,
 						radius: 2,
 						maxOrbitLength: 10000,
 						semiMajorAxis: 1.2,

@@ -10,6 +10,7 @@
 				:type="inputConfiguration.type"
 				:min="inputConfiguration.min"
 				:max="inputConfiguration.max"
+				:step="inputConfiguration.step"
 				v-model="currentValue"
 				@change="handleChange"
 			/>
