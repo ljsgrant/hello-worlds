@@ -3,24 +3,22 @@
 		<p class="control-label">{{ inputConfiguration.label }}</p>
 		<div class="input-wrapper">
 			<input
-				v-if="
-					inputConfiguration.type === 'range' ||
-					inputConfiguration.type === 'number'
-				"
+				v-if="isNumericControl"
 				:type="inputConfiguration.type"
 				:min="inputConfiguration.min"
 				:max="inputConfiguration.max"
 				:step="inputConfiguration.step"
 				v-model="currentValue"
-				@change="handleChange"
+				@input="handleChange"
 			/>
 			<input
 				v-else
 				:type="inputConfiguration.type"
 				v-model="currentValue"
-				@change="handleChange"
+				@input="handleChange"
 			/>
-			<p>{{ currentValue }}</p>
+			<p v-if="isNumericControl">{{ roundToNearest2Decimals(currentValue) }}</p>
+			<p v-else-if="inputConfiguration.type !== 'text'">{{ currentValue }}</p>
 		</div>
 	</div>
 </template>
@@ -74,6 +72,21 @@
 					...this.inputConfiguration,
 					value: this.currentValue,
 				})
+			},
+			roundToNearest2Decimals(numberOrString: number | string): number {
+				const asNumber =
+					typeof numberOrString === "string"
+						? parseFloat(numberOrString)
+						: numberOrString
+				return Math.round(asNumber * 100) / 100
+			},
+		},
+		computed: {
+			isNumericControl() {
+				return (
+					this.inputConfiguration.type === "range" ||
+					this.inputConfiguration.type === "number"
+				)
 			},
 		},
 	})

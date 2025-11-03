@@ -1,10 +1,14 @@
 <template>
 	<div class="planet-controls-wrapper">
-		<p class="control-title">{{ planet.name }}</p>
-		<p class="control-position">
+		<div class="planet-header">
+			<p class="control-title">{{ planet.name }}</p>
+			<button>X</button>
+		</div>
+		<!-- TODO LOUIS: remove if unused -->
+		<!-- <p class="control-position">
 			Coords: x {{ currentPosition.x }}, y {{ currentPosition.y }}, z
 			{{ currentPosition.z }}
-		</p>
+		</p> -->
 		<div v-for="control in validControlsConfiguration" :key="control.property">
 			<GenericPlanetControl
 				:input-configuration="control"
@@ -196,5 +200,12 @@
 		flex-direction: column;
 		align-items: flex-start;
 		justify-content: center;
+		padding: 5px 10px;
+	}
+
+	.planet-header {
+		display: flex;
+		justify-content: space-between;
+		width: 100%;
 	}
 </style>

@@ -33,6 +33,7 @@
 						@change="handlePlanetChange($event)"
 					/>
 				</div>
+				<button>Add New</button>
 			</div>
 		</div>
 	</div>
@@ -64,7 +65,7 @@
 						name: "earth",
 						colour: 0x3399ff,
 						trailOpacity: 0.5,
-						radius: 1.5,
+						radius: 3,
 						maxOrbitLength: 10000,
 						semiMajorAxis: 0.5,
 						eccentricity: 0.5,
@@ -77,8 +78,8 @@
 						longitudeOfPeriapsis: THREE.MathUtils.degToRad(
 							102.93768193 - -11.26064,
 						),
-						apsidalPrecession: 0.01,
-						inclinationDrift: 0.001,
+						apsidalPrecession: 0.0001,
+						inclinationDrift: 0.0001,
 						_objectData: null as THREE.Mesh | null,
 						_orbitLines: [] as THREE.LineLoop[],
 						_orbitPoints: [] as THREE.Vector3[],
@@ -101,8 +102,8 @@
 						longitudeOfPeriapsis: THREE.MathUtils.degToRad(
 							102.93768193 - -11.26064,
 						),
-						apsidalPrecession: 0, // how much does the orbit "swing" around its vertical axis
-						inclinationDrift: 0.01,
+						apsidalPrecession: 0.0001, // how much does the orbit "swing" around its vertical axis
+						inclinationDrift: 0.0001,
 						_objectData: null as THREE.Mesh | null,
 						_orbitLines: [] as THREE.LineLoop[],
 						_orbitPoints: [] as THREE.Vector3[],
@@ -112,7 +113,7 @@
 						name: "cluny",
 						colour: 0x888888,
 						trailOpacity: 0.5,
-						radius: 2.5,
+						radius: 2.75,
 						maxOrbitLength: 10000,
 						semiMajorAxis: 0.5,
 						eccentricity: 0.75,
@@ -125,7 +126,7 @@
 						longitudeOfPeriapsis: THREE.MathUtils.degToRad(
 							102.93768193 - -11.26064,
 						),
-						apsidalPrecession: 0.001,
+						apsidalPrecession: 0.0001,
 						inclinationDrift: 0.0001, // how much does the inclination change over time
 						_objectData: null as THREE.Mesh | null,
 						_orbitLines: [] as THREE.LineLoop[],
@@ -136,9 +137,9 @@
 						name: "elysium",
 						colour: 0xffcc00,
 						trailOpacity: 0.5,
-						radius: 1,
+						radius: 0,
 						maxOrbitLength: 10000,
-						semiMajorAxis: 5,
+						semiMajorAxis: 0.75,
 						eccentricity: 0.02,
 						inclination: THREE.MathUtils.degToRad(2),
 						longitudeOfAscendingNode: THREE.MathUtils.degToRad(45),
@@ -146,8 +147,8 @@
 						meanLongitudeAtEpoch: THREE.MathUtils.degToRad(80),
 						rateOfChangeOfMeanLongitude: THREE.MathUtils.degToRad(47000),
 						longitudeOfPeriapsis: THREE.MathUtils.degToRad(145), // W + w
-						apsidalPrecession: 0.005,
-						inclinationDrift: 0.0005,
+						apsidalPrecession: 0.0001,
+						inclinationDrift: 0.0001,
 						_objectData: null as THREE.Mesh | null,
 						_orbitLines: [] as THREE.LineLoop[],
 						_orbitPoints: [] as THREE.Vector3[],
@@ -159,7 +160,7 @@
 						trailOpacity: 0.5,
 						radius: 4,
 						maxOrbitLength: 10000,
-						semiMajorAxis: 3.5,
+						semiMajorAxis: 1.15,
 						eccentricity: 0.2,
 						inclination: THREE.MathUtils.degToRad(10),
 						longitudeOfAscendingNode: THREE.MathUtils.degToRad(110),
@@ -167,34 +168,34 @@
 						meanLongitudeAtEpoch: THREE.MathUtils.degToRad(20),
 						rateOfChangeOfMeanLongitude: THREE.MathUtils.degToRad(10000),
 						longitudeOfPeriapsis: THREE.MathUtils.degToRad(200), // W + w
-						apsidalPrecession: 0.002,
-						inclinationDrift: 0.0002,
+						apsidalPrecession: 0.0001,
+						inclinationDrift: 0.0001,
 						_objectData: null as THREE.Mesh | null,
 						_orbitLines: [] as THREE.LineLoop[],
 						_orbitPoints: [] as THREE.Vector3[],
 						_orbitCurve: null as THREE.Line | null,
 					},
-					{
-						name: "noctis",
-						colour: 0x9900cc,
-						trailOpacity: 0.5,
-						radius: 2,
-						maxOrbitLength: 10000,
-						semiMajorAxis: 1.2,
-						eccentricity: 0.4,
-						inclination: THREE.MathUtils.degToRad(135),
-						longitudeOfAscendingNode: THREE.MathUtils.degToRad(250),
-						argumentOfPeriapsis: THREE.MathUtils.degToRad(120),
-						meanLongitudeAtEpoch: THREE.MathUtils.degToRad(45),
-						rateOfChangeOfMeanLongitude: THREE.MathUtils.degToRad(1800000),
-						longitudeOfPeriapsis: THREE.MathUtils.degToRad(370),
-						apsidalPrecession: 0.008,
-						inclinationDrift: 0.0015,
-						_objectData: null as THREE.Mesh | null,
-						_orbitLines: [] as THREE.LineLoop[],
-						_orbitPoints: [] as THREE.Vector3[],
-						_orbitCurve: null as THREE.Line | null,
-					},
+					// {
+					// 	name: "noctis",
+					// 	colour: 0x9900cc,
+					// 	trailOpacity: 0.5,
+					// 	radius: 2,
+					// 	maxOrbitLength: 10000,
+					// 	semiMajorAxis: 1.2,
+					// 	eccentricity: 0.4,
+					// 	inclination: THREE.MathUtils.degToRad(135),
+					// 	longitudeOfAscendingNode: THREE.MathUtils.degToRad(250),
+					// 	argumentOfPeriapsis: THREE.MathUtils.degToRad(120),
+					// 	meanLongitudeAtEpoch: THREE.MathUtils.degToRad(45),
+					// 	rateOfChangeOfMeanLongitude: THREE.MathUtils.degToRad(1800000),
+					// 	longitudeOfPeriapsis: THREE.MathUtils.degToRad(370),
+					// 	apsidalPrecession: 0.0001,
+					// 	inclinationDrift: 0.0001,
+					// 	_objectData: null as THREE.Mesh | null,
+					// 	_orbitLines: [] as THREE.LineLoop[],
+					// 	_orbitPoints: [] as THREE.Vector3[],
+					// 	_orbitCurve: null as THREE.Line | null,
+					// },
 				],
 			}
 		},
@@ -293,6 +294,8 @@
 	.planet-controls-area {
 		display: flex;
 		flex-direction: row;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
+		width: 100%;
+		overflow-x: scroll;
 	}
 </style>
